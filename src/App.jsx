@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import FacultyPage from './pages/FacultyPage';
 import StudentPage from './pages/StudentPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -32,6 +33,12 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+
+        <Route path="/profile" element={
+  <ProtectedRoute>
+    <ProfilePage />
+  </ProtectedRoute>
+} />
         
         {/* Catch all - kisi bhi unknown URL pe login pe bhej do */}
         <Route path="*" element={<LoginPage />} />

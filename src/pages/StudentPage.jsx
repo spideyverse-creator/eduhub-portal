@@ -3,14 +3,16 @@ import { useState, useEffect } from 'react';
 import { 
   BookOpen, CheckSquare, FlaskConical, Megaphone, 
   FileText, Eye, Download, Search, AlertTriangle, 
-  ChevronLeft, FolderOpen
+  ChevronLeft, FolderOpen, Star
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext'; // User state ke liye
 import Header from '../components/common/Header';
 import Toast from '../components/common/Toast';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export default function StudentPage() {
+  const { user } = useAuth(); // AuthContext se user nikalo
   const [subjects, setSubjects] = useState([]);
   const [resources, setResources] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -43,7 +45,29 @@ export default function StudentPage() {
     };
   }, []);
 
-  // 2. Helpers (Ab ye sahi jagah pe hain)
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  // Mark as Complete Logic
+  const toggleComplete = async (resId) => {
+    if (!user) return;
+    const userRef = doc(db, 'users', user.id);
+    const isCompleted = user.completedResources?.includes(resId);
+
+    try {
+      if (isCompleted) {
+        await updateDoc(userRef, { completedResources: arrayRemove(resId) });
+      } else {
+        await updateDoc(userRef, { completedResources: arrayUnion(resId) });
+      }
+      showToast(isCompleted ? 'Marked as incomplete' : 'Marked as complete! ⭐');
+    } catch (err) {
+      showToast('Failed to update progress');
+    }
+  };
+
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
   const currentResources = resources.filter(r => {
@@ -60,12 +84,6 @@ export default function StudentPage() {
            a.content.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 3000);
-  };
-
-  // 🔥 FIX: Download function ab add kar diya hai
   const handleDownload = (file) => {
     if (file.fileUrl) {
       window.open(file.fileUrl, "_blank");
@@ -204,6 +222,15 @@ export default function StudentPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        {/* 🔥 MARK AS COMPLETE STAR ICON */}
+                        <button 
+                          onClick={() => toggleComplete(res.id)} 
+                          className={`p-2 rounded-lg transition ${user?.completedResources?.includes(res.id) ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                          title="Mark as Complete"
+                        >
+                          <Star className="w-5 h-5" fill={user?.completedResources?.includes(res.id) ? "currentColor" : "none"} />
+                        </button>
+
                         <button onClick={() => setPreviewFile(res)} className="flex items-center gap-1 text-slate-700 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 font-medium text-xs px-3 py-1.5 rounded-lg transition">
                           <Eye className="w-3.5 h-3.5" /> Preview
                         </button>
@@ -257,7 +284,6 @@ export default function StudentPage() {
               <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600 p-1 font-bold text-xl">&times;</button>
             </div>
             
-            {/* 🔥 FIX: Ab fileUrl use ho raha hai fileData ki jagah */}
             <div className="my-4 bg-slate-100 border border-slate-200 rounded-xl p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center min-h-[300px]">
               {previewFile.fileUrl ? (
                  <iframe src={previewFile.fileUrl} className="w-full h-[50vh] rounded-lg border border-slate-300" title="PDF Preview" />

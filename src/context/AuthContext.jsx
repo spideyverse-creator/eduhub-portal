@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -14,7 +15,12 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
         if (userDoc.exists()) {
-          setUser({ id: firebaseUser.uid, email: firebaseUser.email, ...userDoc.data() });
+          setUser({ 
+            id: firebaseUser.uid, 
+            email: firebaseUser.email, 
+            ...userDoc.data(),
+            completedResources: userDoc.data().completedResources || [] // Default empty array
+          });
         }
       } else {
         setUser(null);
@@ -25,8 +31,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    
-    // Real Firebase Login
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
@@ -42,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     signOut(auth);
-    setUser(null); // Bypass wale user ko bhi logout karo
+    setUser(null);
   };
 
   return (

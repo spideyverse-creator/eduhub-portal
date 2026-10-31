@@ -2,17 +2,22 @@
 import { useState, useEffect } from 'react';
 import { GraduationCap, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom'; // Profile link ke liye
 
 export default function Header({ title, roleBadge, colorTheme = 'indigo' }) {
   const { user, logout } = useAuth();
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 60000); // Har minute update hoga
+    const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  const initials = user?.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  // Avatar URL banane ka function
+  const getAvatarUrl = (name) => {
+    return `https://ui-avatars.com/api/?name=${name}&background=6366f1&color=fff&bold=true`;
+  };
+
   const themeClasses = colorTheme === 'emerald' 
     ? 'bg-emerald-600 text-emerald-50 shadow-emerald-200' 
     : 'bg-indigo-600 text-indigo-50 shadow-indigo-200';
@@ -49,12 +54,14 @@ export default function Header({ title, roleBadge, colorTheme = 'indigo' }) {
               }`}>{roleBadge}</p>
             </div>
             
-            {/* Avatar */}
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${
-               colorTheme === 'emerald' ? 'bg-emerald-500' : 'bg-indigo-500'
-            }`}>
-              {initials}
-            </div>
+            {/* Avatar Link to Profile */}
+            <Link to="/profile" className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all">
+              <img 
+                src={getAvatarUrl(user?.name)} 
+                alt={user?.name} 
+                className="w-full h-full object-cover" 
+              />
+            </Link>
 
             <button 
               onClick={logout} 
