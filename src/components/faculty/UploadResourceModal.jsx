@@ -41,62 +41,58 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     handleFileChange(e.dataTransfer.files[0]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title || !file) {
-      setError('Title and PDF file are required.');
-      return;
-    }
+  const handleSubmit = (e) => {
+  e.preventDefault();
+  if (!title || !file) {
+    setError('Title and PDF file are required.');
+    return;
+  }
 
-    setIsUploading(true);
-    setError('');
+  setIsUploading(true);
+  setError('');
 
-    try {
-      // 🔥 1. File Seedha Upstash pe bhejo (Vercel server bypass)
-      const record = start({ file });
-      if (!record) throw new Error("File processing failed");
+  // 🔥 Sahi Tarika: onDone callback use karo
+  start({ 
+    file,
+    onDone: async (record) => {
+      try {
+        const fileUrl = record.blob.url;
 
-      // 2. Upload complete hone ka wait karo
-      let uploadedRecord = record;
-      while (uploadedRecord.status !== 'done' && uploadedRecord.status !== 'error') {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await addDoc(collection(db, 'resources'), {
+          subjectId: subjectId,
+          category: category,
+          title: title,
+          description: description || 'Uploaded by faculty.',
+          fileName: file.name,
+          fileSize: formatFileSize(file.size),
+          fileUrl: fileUrl,
+          uploadedAt: todayString(),
+          uploadedBy: facultyName,
+          facultyId: facultyId,
+        });
+
+        // Form Reset
+        setTitle(''); 
+        setDescription(''); 
+        setFile(null); 
+        setCategory('notes');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        
+        onClose();
+      } catch (err) {
+        console.error(err);
+        setError('Failed to save file info.');
+      } finally {
+        setIsUploading(false);
       }
-
-      if (uploadedRecord.status === 'error') {
-        throw new Error(uploadedRecord.error?.message || "Upload failed");
-      }
-
-      // 3. URL lo aur Firestore me save karo
-      const fileUrl = uploadedRecord.blob.url;
-
-      await addDoc(collection(db, 'resources'), {
-        subjectId: subjectId,
-        category: category,
-        title: title,
-        description: description || 'Uploaded by faculty.',
-        fileName: file.name,
-        fileSize: formatFileSize(file.size),
-        fileUrl: fileUrl,
-        uploadedAt: todayString(),
-        uploadedBy: facultyName,
-        facultyId: facultyId,
-      });
-
-      // Form Reset
-      setTitle(''); 
-      setDescription(''); 
-      setFile(null); 
-      setCategory('notes');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError('Failed to upload. Check internet or file size.');
-    } finally {
+    },
+    onError: (record) => {
+      console.error(record.error);
+      setError(record.error?.message || 'Upload failed. Try again.');
       setIsUploading(false);
     }
-  };
+  });
+};
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Upload Learning Material" icon={<UploadCloud className="w-5 h-5 text-indigo-600" />}>
