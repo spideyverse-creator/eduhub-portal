@@ -4,7 +4,7 @@ import { uploadHandler } from "@upstash/blob";
 // 🔥 Upstash handler setup
 export const uploads = uploadHandler({
   constraints: {
-    maxSize: "5mb",
+    maxSize: "10mb",
     contentTypes: ["application/pdf"],
   },
   onBeforeUpload: ({ file }) => {

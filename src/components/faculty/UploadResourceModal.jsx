@@ -4,7 +4,6 @@ import { UploadCloud, FileText, X } from 'lucide-react';
 import Modal from '../common/Modal';
 import { formatFileSize, validatePdfFile, todayString } from '../../utils/fileHelper';
 
-// Firebase Firestore Imports
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -26,7 +25,8 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     setError('');
     if (!selectedFile) return;
     
-    const validation = validatePdfFile(selectedFile, 5);
+    // Limit 10MB kar di
+    const validation = validatePdfFile(selectedFile, 10);
     if (!validation.valid) {
       setError(validation.error);
       setFile(null);
@@ -76,20 +76,20 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
         description: description || 'Uploaded by faculty.',
         fileName: file.name,
         fileSize: formatFileSize(file.size),
-        fileUrl: fileUrl, // Upstash ka direct URL
+        fileUrl: fileUrl,
         uploadedAt: todayString(),
         uploadedBy: facultyName,
         facultyId: facultyId,
       });
 
-      // Form Reset karo
+      // Form Reset
       setTitle(''); 
       setDescription(''); 
       setFile(null); 
       setCategory('notes');
       if (fileInputRef.current) fileInputRef.current.value = '';
       
-      onClose(); // Modal band karo
+      onClose();
     } catch (err) {
       console.error(err);
       setError('Failed to upload. Check internet or file size.');
@@ -134,9 +134,8 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
           />
         </div>
 
-        {/* File Upload Area */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload PDF File (Max 5MB)</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload PDF File (Max 10MB)</label>
           
           {!file ? (
             <div 
@@ -154,7 +153,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
                 <UploadCloud className="w-6 h-6" />
               </div>
               <p className="text-sm font-bold text-slate-800">Click to browse or drag & drop</p>
-              <p className="text-xs text-slate-500 mt-1">Only PDF files up to 5MB are supported</p>
+              <p className="text-xs text-slate-500 mt-1">Only PDF files up to 10MB are supported</p>
             </div>
           ) : (
             <div className="flex items-center justify-between bg-white border border-indigo-200 rounded-xl p-4 shadow-sm">
