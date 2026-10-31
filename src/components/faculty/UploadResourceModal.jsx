@@ -8,7 +8,11 @@ import { formatFileSize, validatePdfFile, todayString } from '../../utils/fileHe
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
+// 🔥 Upstash Official Hook
+import { useUpload } from "@upstash/blob/react";
+
 export default function UploadResourceModal({ isOpen, onClose, subjectId, facultyName, facultyId }) {
+  const { start } = useUpload("/api/upload"); // Hook initialize
   const [category, setCategory] = useState('notes');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -22,7 +26,6 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     setError('');
     if (!selectedFile) return;
     
-    // PDF aur 5MB limit check
     const validation = validatePdfFile(selectedFile, 5);
     if (!validation.valid) {
       setError(validation.error);
@@ -35,18 +38,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    handleFileChange(droppedFile);
-  };
-
-  // File ko Base64 me convert karne ka function
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]); // Sirf base64 part
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    handleFileChange(e.dataTransfer.files[0]);
   };
 
   const handleSubmit = async (e) => {
@@ -60,26 +52,23 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     setError('');
 
     try {
-      // 1. File ko Base64 me convert karo
-      const base64Data = await fileToBase64(file);
+      // 🔥 1. File Seedha Upstash pe bhejo (Vercel server bypass)
+      const record = start({ file });
+      if (!record) throw new Error("File processing failed");
 
-      // 2. Backend API ko Base64 bhejo
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileData: base64Data,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Backend upload failed');
+      // 2. Upload complete hone ka wait karo
+      let uploadedRecord = record;
+      while (uploadedRecord.status !== 'done' && uploadedRecord.status !== 'error') {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
-      const { url } = await response.json();
 
-      // 3. Firestore me details save karo
+      if (uploadedRecord.status === 'error') {
+        throw new Error(uploadedRecord.error?.message || "Upload failed");
+      }
+
+      // 3. URL lo aur Firestore me save karo
+      const fileUrl = uploadedRecord.blob.url;
+
       await addDoc(collection(db, 'resources'), {
         subjectId: subjectId,
         category: category,
@@ -87,7 +76,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
         description: description || 'Uploaded by faculty.',
         fileName: file.name,
         fileSize: formatFileSize(file.size),
-        fileUrl: url, // Upstash ka URL jo backend se aaya
+        fileUrl: fileUrl, // Upstash ka direct URL
         uploadedAt: todayString(),
         uploadedBy: facultyName,
         facultyId: facultyId,
@@ -103,7 +92,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
       onClose(); // Modal band karo
     } catch (err) {
       console.error(err);
-      setError('Failed to upload. Check server logs or internet.');
+      setError('Failed to upload. Check internet or file size.');
     } finally {
       setIsUploading(false);
     }
