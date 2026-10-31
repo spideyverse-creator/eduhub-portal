@@ -183,7 +183,7 @@ export default function StudentPage() {
                   { id: 'assignments', label: 'Assignments', icon: <CheckSquare className="w-4 h-4" /> },
                   { id: 'lab_manual', label: 'Lab Manuals', icon: <FlaskConical className="w-4 h-4" /> },
                   { id: 'announcements', label: 'Notices', icon: <Megaphone className="w-4 h-4" /> },
-                  { id: 'submission', label: 'Submit Work', icon: <UploadCloud className="w-4 h-4" /> } // 🔥 Naya Tab
+                  { id: 'submission', label: 'Submit Work', icon: <UploadCloud className="w-4 h-4" /> }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -273,7 +273,7 @@ export default function StudentPage() {
                 )
               )}
 
-              {/* 🔥 Submission Tab Content */}
+              {/* Submission Tab Content */}
               {activeTab === 'submission' && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
                   <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">

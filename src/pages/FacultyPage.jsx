@@ -16,6 +16,7 @@ import Toast from '../components/common/Toast';
 import CreateSubjectModal from '../components/faculty/CreateSubjectModal';
 import UploadResourceModal from '../components/faculty/UploadResourceModal';
 import PostAnnouncementModal from '../components/faculty/PostAnnouncementModal';
+import { X } from 'lucide-react';
 
 export default function FacultyPage() {
   const { user } = useAuth();
@@ -28,6 +29,8 @@ export default function FacultyPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [activeTab, setActiveTab] = useState('notes');
   const [toast, setToast] = useState('');
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [tempLink, setTempLink] = useState('');
 
   // Modals state
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
@@ -242,17 +245,14 @@ export default function FacultyPage() {
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {/* 🔥 Update Form Link Button */}
                     <button
-                      onClick={async () => {
-                        const newLink = prompt("Enter new Google Form Link:", selectedSubject.formLink || "");
-                        if (newLink !== null) {
-                          await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: newLink });
-                          showToast('Submission link updated!');
-                        }
-                      }}
-                      className="flex items-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 border border-white/20 text-white font-semibold text-xs px-3 py-2.5 rounded-xl backdrop-blur-md transition"
-                    >
-                      <LinkIcon className="w-4 h-4" /> Update Form Link
-                    </button>
+  onClick={() => {
+    setTempLink(selectedSubject.formLink || '');
+    setIsLinkModalOpen(true);
+  }}
+  className="flex items-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 border border-white/20 text-white font-semibold text-xs px-3 py-2.5 rounded-xl backdrop-blur-md transition"
+>
+  <LinkIcon className="w-4 h-4" /> Update Form Link
+</button>
 
                     <button
                       onClick={() => setIsResourceModalOpen(true)}
@@ -444,6 +444,43 @@ export default function FacultyPage() {
     </div>
   );
 }
+
+{/* 🔥 FORM LINK MODAL */}
+{isLinkModalOpen && (
+  <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onClick={() => setIsLinkModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <X className="w-5 h-5" />
+      </button>
+      <h3 className="text-lg font-bold text-slate-900 mb-2">Add Submission Link</h3>
+      <p className="text-xs text-slate-500 mb-4">Paste your Google Form link below. Students will see this link in the "Submit Work" tab.</p>
+      
+      <input
+        type="url"
+        placeholder="https://forms.gle/..."
+        value={tempLink}
+        onChange={(e) => setTempLink(e.target.value)}
+        className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+      />
+      
+      <button
+        onClick={async () => {
+          try {
+            await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink });
+            showToast('Form link saved successfully!');
+            setIsLinkModalOpen(false);
+          } catch (error) {
+            console.error(error);
+            showToast('Failed to save link.');
+          }
+        }}
+        className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition"
+      >
+        Save Link
+      </button>
+    </div>
+  </div>
+)}
 
 function EmptyState({ title, desc }) {
   return (
