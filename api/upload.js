@@ -1,12 +1,12 @@
 // api/upload.js
 import { uploadHandler } from "@upstash/blob";
 
-// 🔥 Upstash handler setup
 export const uploads = uploadHandler({
   constraints: {
-    maxSize: "10mb",
+    maxSize: "15mb", // 🔥 Limit 15MB kar di
     contentTypes: ["application/pdf"],
   },
+  multipart: "5mb", // 5MB se badi file tukdon me upload hogi (fast)
   onBeforeUpload: ({ file }) => {
     return {
       path: `resources/${Date.now()}_${file.name}`,
@@ -18,7 +18,6 @@ export const uploads = uploadHandler({
 });
 
 export default async function handler(req, res) {
-  // GET aur POST dono allow karo (405 error se bachne ke liye)
   if (req.method === 'GET' || req.method === 'POST') {
     return uploads(req, res);
   }

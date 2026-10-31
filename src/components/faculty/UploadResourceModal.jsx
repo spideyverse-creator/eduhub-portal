@@ -11,7 +11,7 @@ import { db } from '../../firebase/config';
 import { useUpload } from "@upstash/blob/react";
 
 export default function UploadResourceModal({ isOpen, onClose, subjectId, facultyName, facultyId }) {
-  const { start } = useUpload("/api/upload"); // Hook initialize
+  const { start } = useUpload("/api/upload");
   const [category, setCategory] = useState('notes');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,8 +25,8 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     setError('');
     if (!selectedFile) return;
     
-    // Limit 10MB kar di
-    const validation = validatePdfFile(selectedFile, 10);
+    // Limit 15MB
+    const validation = validatePdfFile(selectedFile, 15);
     if (!validation.valid) {
       setError(validation.error);
       setFile(null);
@@ -42,57 +42,57 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
   };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
-  if (!title || !file) {
-    setError('Title and PDF file are required.');
-    return;
-  }
+    e.preventDefault();
+    if (!title || !file) {
+      setError('Title and PDF file are required.');
+      return;
+    }
 
-  setIsUploading(true);
-  setError('');
+    setIsUploading(true);
+    setError('');
 
-  // 🔥 Sahi Tarika: onDone callback use karo
-  start({ 
-    file,
-    onDone: async (record) => {
-      try {
-        const fileUrl = record.blob.url;
+    // 🔥 SAHI TARIKA: start() me onDone callback pass karo
+    start({ 
+      file,
+      onDone: async (record) => {
+        try {
+          const fileUrl = record.blob.url;
 
-        await addDoc(collection(db, 'resources'), {
-          subjectId: subjectId,
-          category: category,
-          title: title,
-          description: description || 'Uploaded by faculty.',
-          fileName: file.name,
-          fileSize: formatFileSize(file.size),
-          fileUrl: fileUrl,
-          uploadedAt: todayString(),
-          uploadedBy: facultyName,
-          facultyId: facultyId,
-        });
+          await addDoc(collection(db, 'resources'), {
+            subjectId: subjectId,
+            category: category,
+            title: title,
+            description: description || 'Uploaded by faculty.',
+            fileName: file.name,
+            fileSize: formatFileSize(file.size),
+            fileUrl: fileUrl,
+            uploadedAt: todayString(),
+            uploadedBy: facultyName,
+            facultyId: facultyId,
+          });
 
-        // Form Reset
-        setTitle(''); 
-        setDescription(''); 
-        setFile(null); 
-        setCategory('notes');
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        
-        onClose();
-      } catch (err) {
-        console.error(err);
-        setError('Failed to save file info.');
-      } finally {
+          // Reset
+          setTitle(''); 
+          setDescription(''); 
+          setFile(null); 
+          setCategory('notes');
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          
+          onClose();
+        } catch (err) {
+          console.error(err);
+          setError('Failed to save file info.');
+        } finally {
+          setIsUploading(false);
+        }
+      },
+      onError: (record) => {
+        console.error(record.error);
+        setError(record.error?.message || 'Upload failed. Try again.');
         setIsUploading(false);
       }
-    },
-    onError: (record) => {
-      console.error(record.error);
-      setError(record.error?.message || 'Upload failed. Try again.');
-      setIsUploading(false);
-    }
-  });
-};
+    });
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Upload Learning Material" icon={<UploadCloud className="w-5 h-5 text-indigo-600" />}>
@@ -131,7 +131,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload PDF File (Max 10MB)</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload PDF File (Max 15MB)</label>
           
           {!file ? (
             <div 
@@ -149,7 +149,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
                 <UploadCloud className="w-6 h-6" />
               </div>
               <p className="text-sm font-bold text-slate-800">Click to browse or drag & drop</p>
-              <p className="text-xs text-slate-500 mt-1">Only PDF files up to 10MB are supported</p>
+              <p className="text-xs text-slate-500 mt-1">Only PDF files up to 15MB are supported</p>
             </div>
           ) : (
             <div className="flex items-center justify-between bg-white border border-indigo-200 rounded-xl p-4 shadow-sm">
