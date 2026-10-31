@@ -3,20 +3,17 @@ import { useState, useEffect } from 'react';
 import { 
   BookOpen, CheckSquare, FlaskConical, Megaphone, 
   FileText, Eye, Download, Search, AlertTriangle, 
-  ChevronLeft, FolderOpen, Star, UploadCloud
+  ChevronLeft, FolderOpen, Star, UploadCloud, ChevronRight
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; // AuthContext import
+import { useAuth } from '../context/AuthContext'; 
 import Header from '../components/common/Header';
 import Toast from '../components/common/Toast';
 import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export default function StudentPage() {
-  const { user: authUser } = useAuth(); // Name change taaki local state se clash na ho
-  
-  // Local state jo UI ko turant update karegi
+  const { user: authUser } = useAuth(); 
   const [localUser, setLocalUser] = useState(authUser);
-
   const [subjects, setSubjects] = useState([]);
   const [resources, setResources] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -28,25 +25,20 @@ export default function StudentPage() {
   const [toast, setToast] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
 
-  // AuthContext update hone par local state sync karo
   useEffect(() => {
     if (authUser) setLocalUser(authUser);
   }, [authUser]);
 
-  // 1. Firebase se Data Fetch karo
   useEffect(() => {
     const unsubSubjects = onSnapshot(collection(db, "subjects"), (snapshot) => {
       setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-
     const unsubResources = onSnapshot(collection(db, "resources"), (snapshot) => {
       setResources(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-
     const unsubAnnouncements = onSnapshot(collection(db, "announcements"), (snapshot) => {
       setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-
     return () => {
       unsubSubjects();
       unsubResources();
@@ -59,19 +51,15 @@ export default function StudentPage() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  // Optimistic Mark as Complete Logic
   const toggleComplete = async (resId) => {
     if (!localUser) return;
     const isCompleted = localUser.completedResources?.includes(resId);
-
-    // 1. UI ko turant update karo (Optimistic Update)
     const newCompleted = isCompleted 
       ? localUser.completedResources.filter(id => id !== resId) 
       : [...(localUser.completedResources || []), resId];
     
     setLocalUser({ ...localUser, completedResources: newCompleted });
 
-    // 2. Database me save karo
     const userRef = doc(db, 'users', localUser.id);
     try {
       if (isCompleted) {
@@ -81,13 +69,10 @@ export default function StudentPage() {
       }
       showToast(isCompleted ? 'Marked as incomplete' : 'Marked as complete! ⭐');
     } catch (err) {
-      // Agar error aaye toh UI ko wapas purana kar do
       setLocalUser(localUser); 
       showToast('Failed to update progress');
     }
   };
-
-  const totalCompleted = localUser?.completedResources?.length || 0;
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
@@ -198,7 +183,7 @@ export default function StudentPage() {
                   { id: 'assignments', label: 'Assignments', icon: <CheckSquare className="w-4 h-4" /> },
                   { id: 'lab_manual', label: 'Lab Manuals', icon: <FlaskConical className="w-4 h-4" /> },
                   { id: 'announcements', label: 'Notices', icon: <Megaphone className="w-4 h-4" /> },
-                  { id: 'submission', label: 'Submit Work', icon: <UploadCloud className="w-4 h-4" /> }
+                  { id: 'submission', label: 'Submit Work', icon: <UploadCloud className="w-4 h-4" /> } // 🔥 Naya Tab
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -223,6 +208,7 @@ export default function StudentPage() {
             </div>
 
             <div className="space-y-3">
+              {/* Notes, Assignments, Lab Manuals View */}
               {activeTab !== 'announcements' && activeTab !== 'submission' && (
                 currentResources.length === 0 ? (
                   <EmptyState title="No materials found" desc="No files uploaded in this section yet." />
@@ -244,7 +230,6 @@ export default function StudentPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                        {/* MARK AS COMPLETE STAR ICON */}
                         <button 
                           onClick={() => toggleComplete(res.id)} 
                           className={`p-2 rounded-lg transition ${localUser?.completedResources?.includes(res.id) ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
@@ -265,6 +250,7 @@ export default function StudentPage() {
                 )
               )}
 
+              {/* Announcements View */}
               {activeTab === 'announcements' && (
                 currentAnnouncements.length === 0 ? (
                   <EmptyState title="No notices found" desc="No announcements posted for this subject." />
@@ -287,7 +273,7 @@ export default function StudentPage() {
                 )
               )}
 
-              {/* Submission Tab Content */}
+              {/* 🔥 Submission Tab Content */}
               {activeTab === 'submission' && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
                   <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
