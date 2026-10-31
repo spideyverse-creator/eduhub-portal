@@ -25,6 +25,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (req.method === 'GET' || req.method === 'POST') {
+    return uploads(req, res);
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+
   const { fileName, fileData } = req.body;
 
   if (!fileName || !fileData) {

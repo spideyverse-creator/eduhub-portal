@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Plus, BookOpen, CheckSquare, FlaskConical, Megaphone, 
-  Trash2, FileText, UploadCloud, Eye, Download, AlertTriangle, Link as LinkIcon
+  Trash2, FileText, UploadCloud, Eye, Download, AlertTriangle, Link as LinkIcon, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,7 +16,6 @@ import Toast from '../components/common/Toast';
 import CreateSubjectModal from '../components/faculty/CreateSubjectModal';
 import UploadResourceModal from '../components/faculty/UploadResourceModal';
 import PostAnnouncementModal from '../components/faculty/PostAnnouncementModal';
-import { X } from 'lucide-react';
 
 export default function FacultyPage() {
   const { user } = useAuth();
@@ -122,7 +121,8 @@ export default function FacultyPage() {
   };
 
   const handleDeleteSubject = async (subId) => {
-    if (!window.confirm(`Delete "${selectedSubject.name}"? This will also delete all its resources.`)) return;
+    if (!window.confirm(`Delete "${selectedSubject?.name}"? This will also delete all its resources.`)) return;
+    
     try {
       // 1. Delete Subject
       await deleteDoc(doc(db, "subjects", subId));
@@ -139,12 +139,16 @@ export default function FacultyPage() {
         await deleteDoc(doc(db, "announcements", ann.id));
       }
 
+      // 4. UI Update
       if (selectedSubjectId === subId) {
-        setSelectedSubjectId(subjects.length > 1 ? subjects.find(s => s.id !== subId)?.id : null);
+        const remainingSubs = subjects.filter(s => s.id !== subId);
+        setSelectedSubjectId(remainingSubs.length > 0 ? remainingSubs[0].id : null);
       }
+      
       showToast('Subject and its contents deleted safely.');
     } catch (err) {
-      showToast('Error deleting subject.');
+      console.error("DELETE ERROR:", err);
+      showToast('Failed to delete subject.');
     }
   };
 
@@ -218,7 +222,7 @@ export default function FacultyPage() {
           {!selectedSubject ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center h-full flex flex-col items-center justify-center">
               <BookOpen className="w-16 h-16 text-slate-300 mb-4" />
-              <h2 className="text-xl font-bold text-slate-700">Welcome, {user.name}</h2>
+              <h2 className="text-xl font-bold text-slate-700">Welcome, {user?.name}</h2>
               <p className="text-sm text-slate-500 mt-2 mb-6">You haven't created any subjects yet.</p>
               <button 
                 onClick={() => setIsSubjectModalOpen(true)}
@@ -243,16 +247,15 @@ export default function FacultyPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {/* 🔥 Update Form Link Button */}
                     <button
-  onClick={() => {
-    setTempLink(selectedSubject.formLink || '');
-    setIsLinkModalOpen(true);
-  }}
-  className="flex items-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 border border-white/20 text-white font-semibold text-xs px-3 py-2.5 rounded-xl backdrop-blur-md transition"
->
-  <LinkIcon className="w-4 h-4" /> Update Form Link
-</button>
+                      onClick={() => {
+                        setTempLink(selectedSubject.formLink || '');
+                        setIsLinkModalOpen(true);
+                      }}
+                      className="flex items-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 border border-white/20 text-white font-semibold text-xs px-3 py-2.5 rounded-xl backdrop-blur-md transition"
+                    >
+                      <LinkIcon className="w-4 h-4" /> Update Form Link
+                    </button>
 
                     <button
                       onClick={() => setIsResourceModalOpen(true)}
@@ -366,8 +369,8 @@ export default function FacultyPage() {
         isOpen={isSubjectModalOpen} 
         onClose={() => setIsSubjectModalOpen(false)} 
         onCreate={handleCreateSubject} 
-        facultyName={user.name}
-        facultyId={user.id}
+        facultyName={user?.name}
+        facultyId={user?.id}
       />
 
       {selectedSubject && (
@@ -376,18 +379,16 @@ export default function FacultyPage() {
             isOpen={isResourceModalOpen} 
             onClose={() => setIsResourceModalOpen(false)} 
             subjectId={selectedSubject.id}
-            facultyName={user.name}
-            facultyId={user.id}
+            facultyName={user?.name}
+            facultyId={user?.id}
           />
           <PostAnnouncementModal 
             isOpen={isAnnouncementModalOpen} 
             onClose={() => setIsAnnouncementModalOpen(false)} 
-            onPost={(newAnn) => {
-               // Note: PostAnnouncementModal handles Firebase directly
-            }}
+            onPost={() => {}}
             subjectId={selectedSubject.id}
-            facultyName={user.name}
-            facultyId={user.id}
+            facultyName={user?.name}
+            facultyId={user?.id}
           />
         </>
       )}
@@ -441,46 +442,46 @@ export default function FacultyPage() {
           </div>
         </div>
       )}
+
+      {/* FORM LINK MODAL */}
+      {isLinkModalOpen && selectedSubject && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onClick={() => setIsLinkModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Add Submission Link</h3>
+            <p className="text-xs text-slate-500 mb-4">Paste your Google Form link below. Students will see this link in the "Submit Work" tab.</p>
+            
+            <input
+              type="url"
+              placeholder="https://forms.gle/..."
+              value={tempLink}
+              onChange={(e) => setTempLink(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+            
+            <button
+              onClick={async () => {
+                try {
+                  await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink });
+                  showToast('Form link saved successfully!');
+                  setIsLinkModalOpen(false);
+                } catch (error) {
+                  console.error(error);
+                  showToast('Failed to save link.');
+                }
+              }}
+              className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition"
+            >
+              Save Link
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-{/* 🔥 FORM LINK MODAL */}
-{isLinkModalOpen && (
-  <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button onClick={() => setIsLinkModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <X className="w-5 h-5" />
-      </button>
-      <h3 className="text-lg font-bold text-slate-900 mb-2">Add Submission Link</h3>
-      <p className="text-xs text-slate-500 mb-4">Paste your Google Form link below. Students will see this link in the "Submit Work" tab.</p>
-      
-      <input
-        type="url"
-        placeholder="https://forms.gle/..."
-        value={tempLink}
-        onChange={(e) => setTempLink(e.target.value)}
-        className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
-      />
-      
-      <button
-        onClick={async () => {
-          try {
-            await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink });
-            showToast('Form link saved successfully!');
-            setIsLinkModalOpen(false);
-          } catch (error) {
-            console.error(error);
-            showToast('Failed to save link.');
-          }
-        }}
-        className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition"
-      >
-        Save Link
-      </button>
-    </div>
-  </div>
-)}
 
 function EmptyState({ title, desc }) {
   return (
