@@ -125,7 +125,7 @@ export default function StudentPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {subjects.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(sub => {
+              {subjects.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (s.code || '').toLowerCase().includes(searchTerm.toLowerCase())).map(sub => {
                 const subResources = resources.filter(r => r.subjectId === sub.id);
                 const notesCount = subResources.filter(r => r.category === 'notes').length;
                 const assignCount = subResources.filter(r => r.category === 'assignments').length;
