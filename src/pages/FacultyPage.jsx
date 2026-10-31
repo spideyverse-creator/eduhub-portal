@@ -16,6 +16,7 @@ import Toast from '../components/common/Toast';
 import CreateSubjectModal from '../components/faculty/CreateSubjectModal';
 import UploadResourceModal from '../components/faculty/UploadResourceModal';
 import PostAnnouncementModal from '../components/faculty/PostAnnouncementModal';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function FacultyPage() {
   const { user } = useAuth();
@@ -464,7 +465,7 @@ export default function FacultyPage() {
             <button
               onClick={async () => {
                 try {
-                  await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink });
+                  await setDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink }, { merge: true });
                   showToast('Form link saved successfully!');
                   setIsLinkModalOpen(false);
                 } catch (error) {
