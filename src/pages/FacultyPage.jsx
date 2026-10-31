@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-// 🔥 Firebase Imports (Sab ek saath, bina duplicate ke)
+// 🔥 Firebase Imports (Sab ek hi baar me, bina duplicate ke)
 import { 
   collection, query, where, onSnapshot, addDoc, 
   deleteDoc, doc, updateDoc, setDoc 
