@@ -2,12 +2,12 @@
 import { useState, useEffect } from 'react';
 import { 
   Plus, BookOpen, CheckSquare, FlaskConical, Megaphone, 
-  Trash2, FileText, UploadCloud, Eye, Download, AlertTriangle
+  Trash2, FileText, UploadCloud, Eye, Download, AlertTriangle, Link as LinkIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 // Firebase Imports
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // Components
@@ -239,7 +239,21 @@ export default function FacultyPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {/* 🔥 Update Form Link Button */}
+                    <button
+                      onClick={async () => {
+                        const newLink = prompt("Enter new Google Form Link:", selectedSubject.formLink || "");
+                        if (newLink !== null) {
+                          await updateDoc(doc(db, "subjects", selectedSubject.id), { formLink: newLink });
+                          showToast('Submission link updated!');
+                        }
+                      }}
+                      className="flex items-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 border border-white/20 text-white font-semibold text-xs px-3 py-2.5 rounded-xl backdrop-blur-md transition"
+                    >
+                      <LinkIcon className="w-4 h-4" /> Update Form Link
+                    </button>
+
                     <button
                       onClick={() => setIsResourceModalOpen(true)}
                       className="flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg transition"
@@ -369,8 +383,7 @@ export default function FacultyPage() {
             isOpen={isAnnouncementModalOpen} 
             onClose={() => setIsAnnouncementModalOpen(false)} 
             onPost={(newAnn) => {
-               // Note: PostAnnouncementModal needs update to save to Firebase
-               // For now, we assume it handles Firebase directly or we update it later.
+               // Note: PostAnnouncementModal handles Firebase directly
             }}
             subjectId={selectedSubject.id}
             facultyName={user.name}
@@ -432,7 +445,6 @@ export default function FacultyPage() {
   );
 }
 
-// 🔥 EmptyState Component (Ab sahi jagah pe hai)
 function EmptyState({ title, desc }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">

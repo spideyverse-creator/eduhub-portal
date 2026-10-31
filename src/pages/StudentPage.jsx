@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { 
   BookOpen, CheckSquare, FlaskConical, Megaphone, 
   FileText, Eye, Download, Search, AlertTriangle, 
-  ChevronLeft, FolderOpen, Star
+  ChevronLeft, FolderOpen, Star, UploadCloud
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'; // AuthContext import
 import Header from '../components/common/Header';
@@ -197,7 +197,8 @@ export default function StudentPage() {
                   { id: 'notes', label: 'Notes', icon: <BookOpen className="w-4 h-4" /> },
                   { id: 'assignments', label: 'Assignments', icon: <CheckSquare className="w-4 h-4" /> },
                   { id: 'lab_manual', label: 'Lab Manuals', icon: <FlaskConical className="w-4 h-4" /> },
-                  { id: 'announcements', label: 'Notices', icon: <Megaphone className="w-4 h-4" /> }
+                  { id: 'announcements', label: 'Notices', icon: <Megaphone className="w-4 h-4" /> },
+                  { id: 'submission', label: 'Submit Work', icon: <UploadCloud className="w-4 h-4" /> }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -222,7 +223,7 @@ export default function StudentPage() {
             </div>
 
             <div className="space-y-3">
-              {activeTab !== 'announcements' && (
+              {activeTab !== 'announcements' && activeTab !== 'submission' && (
                 currentResources.length === 0 ? (
                   <EmptyState title="No materials found" desc="No files uploaded in this section yet." />
                 ) : (
@@ -284,6 +285,35 @@ export default function StudentPage() {
                     </div>
                   ))
                 )
+              )}
+
+              {/* Submission Tab Content */}
+              {activeTab === 'submission' && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <UploadCloud className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Submit Your Assignment</h3>
+                  <p className="text-sm text-slate-500 max-w-md mx-auto mt-2 mb-6">
+                    Click the button below to upload your assignment or Coursera certificate. 
+                    Make sure to enter your PRN correctly in the form.
+                  </p>
+                  
+                  {selectedSubject.formLink ? (
+                    <a 
+                      href={selectedSubject.formLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md"
+                    >
+                      Open Submission Form <ChevronRight className="w-5 h-5" />
+                    </a>
+                  ) : (
+                    <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-sm border border-rose-200 inline-block">
+                      Faculty hasn't added a submission form for this subject yet.
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
