@@ -4,9 +4,6 @@ import { UploadCloud, FileText, X } from 'lucide-react';
 import Modal from '../common/Modal';
 import { formatFileSize, validatePdfFile, todayString } from '../../utils/fileHelper';
 
-// Upstash Hook
-import { useUpload } from "@upstash/blob/react";
-
 // Firebase Firestore Imports
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -20,9 +17,6 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-
-  // 🔥 Yahan hum 'start' function nikal rahe hain
-  const { start } = useUpload("/api/upload");
 
   const handleFileChange = (selectedFile) => {
     setError('');
@@ -55,33 +49,31 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
     setError('');
 
     try {
-      // 1. Upstash ke 'start' function se file upload karo
-      const record = start({ file });
+      // 1. Server se upload URL maango
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, fileType: file.type })
+      });
 
-      // Agar record null hai toh file nahi mili
-      if (!record) {
-        throw new Error("File could not be processed");
+      if (!res.ok) {
+        throw new Error('Failed to get presigned upload URL');
       }
 
-      // 2. Upload complete hone ka wait karo (Promise)
-      // Note: 'start' ek record return karta hai, par complete hone pe 'record.blob' milta hai
-      // Hum simple rakhne ke liye 'await' kar lenge jab tak status 'done' na ho
-      let uploadedRecord = record;
-      
-      // Ye thoda tricky hai, par jab tak upload complete nahi hota, hum wait karenge
-      while (uploadedRecord.status !== 'done' && uploadedRecord.status !== 'error') {
-        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 sec wait
-        // Hook se latest record lena padega, par abhi ke liye hum 'upload' variable use karenge
-        // Agar tu 'upload' variable use karega toh wo latest record dega
+      const { uploadUrl, fileUrl } = await res.json();
+
+      // 2. File ko SEEDHA Upstash pe bhejo (Server bypass)
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file, // Base64 nahi, seedhi file
+        headers: { 'Content-Type': file.type }
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Direct file upload to storage failed');
       }
 
-      if (uploadedRecord.status === 'error') {
-        throw new Error(uploadedRecord.error?.message || "Upload failed");
-      }
-
-      // 3. Firestore me save karo (URL record.blob.url se milega)
-      const fileUrl = uploadedRecord.blob.url;
-
+      // 3. Firestore me save karo (Direct Upstash URL)
       await addDoc(collection(db, 'resources'), {
         subjectId: subjectId,
         category: category,
@@ -105,7 +97,7 @@ export default function UploadResourceModal({ isOpen, onClose, subjectId, facult
       onClose(); // Modal band karo
     } catch (err) {
       console.error(err);
-      setError('Failed to upload. Check server logs or internet.');
+      setError('Upload failed. Check server logs or internet.');
     } finally {
       setIsUploading(false);
     }
