@@ -6,8 +6,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-// Firebase Imports
-import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+// 🔥 Firebase Imports (Sab ek saath, bina duplicate ke)
+import { 
+  collection, query, where, onSnapshot, addDoc, 
+  deleteDoc, doc, updateDoc, setDoc 
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // Components
@@ -16,7 +19,6 @@ import Toast from '../components/common/Toast';
 import CreateSubjectModal from '../components/faculty/CreateSubjectModal';
 import UploadResourceModal from '../components/faculty/UploadResourceModal';
 import PostAnnouncementModal from '../components/faculty/PostAnnouncementModal';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function FacultyPage() {
   const { user } = useAuth();
