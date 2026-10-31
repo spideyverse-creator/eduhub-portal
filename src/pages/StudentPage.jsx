@@ -5,14 +5,18 @@ import {
   FileText, Eye, Download, Search, AlertTriangle, 
   ChevronLeft, FolderOpen, Star
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; // User state ke liye
+import { useAuth } from '../context/AuthContext'; // AuthContext import
 import Header from '../components/common/Header';
 import Toast from '../components/common/Toast';
 import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export default function StudentPage() {
-  const { user } = useAuth(); // AuthContext se user nikalo
+  const { user: authUser } = useAuth(); // Name change taaki local state se clash na ho
+  
+  // Local state jo UI ko turant update karegi
+  const [localUser, setLocalUser] = useState(authUser);
+
   const [subjects, setSubjects] = useState([]);
   const [resources, setResources] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -23,6 +27,11 @@ export default function StudentPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
+
+  // AuthContext update hone par local state sync karo
+  useEffect(() => {
+    if (authUser) setLocalUser(authUser);
+  }, [authUser]);
 
   // 1. Firebase se Data Fetch karo
   useEffect(() => {
@@ -50,12 +59,20 @@ export default function StudentPage() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  // Mark as Complete Logic
+  // Optimistic Mark as Complete Logic
   const toggleComplete = async (resId) => {
-    if (!user) return;
-    const userRef = doc(db, 'users', user.id);
-    const isCompleted = user.completedResources?.includes(resId);
+    if (!localUser) return;
+    const isCompleted = localUser.completedResources?.includes(resId);
 
+    // 1. UI ko turant update karo (Optimistic Update)
+    const newCompleted = isCompleted 
+      ? localUser.completedResources.filter(id => id !== resId) 
+      : [...(localUser.completedResources || []), resId];
+    
+    setLocalUser({ ...localUser, completedResources: newCompleted });
+
+    // 2. Database me save karo
+    const userRef = doc(db, 'users', localUser.id);
     try {
       if (isCompleted) {
         await updateDoc(userRef, { completedResources: arrayRemove(resId) });
@@ -64,9 +81,13 @@ export default function StudentPage() {
       }
       showToast(isCompleted ? 'Marked as incomplete' : 'Marked as complete! ⭐');
     } catch (err) {
+      // Agar error aaye toh UI ko wapas purana kar do
+      setLocalUser(localUser); 
       showToast('Failed to update progress');
     }
   };
+
+  const totalCompleted = localUser?.completedResources?.length || 0;
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
 
@@ -222,13 +243,13 @@ export default function StudentPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                        {/* 🔥 MARK AS COMPLETE STAR ICON */}
+                        {/* MARK AS COMPLETE STAR ICON */}
                         <button 
                           onClick={() => toggleComplete(res.id)} 
-                          className={`p-2 rounded-lg transition ${user?.completedResources?.includes(res.id) ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                          className={`p-2 rounded-lg transition ${localUser?.completedResources?.includes(res.id) ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
                           title="Mark as Complete"
                         >
-                          <Star className="w-5 h-5" fill={user?.completedResources?.includes(res.id) ? "currentColor" : "none"} />
+                          <Star className="w-5 h-5" fill={localUser?.completedResources?.includes(res.id) ? "currentColor" : "none"} />
                         </button>
 
                         <button onClick={() => setPreviewFile(res)} className="flex items-center gap-1 text-slate-700 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 font-medium text-xs px-3 py-1.5 rounded-lg transition">
