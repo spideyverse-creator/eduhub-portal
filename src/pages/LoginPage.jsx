@@ -46,15 +46,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     setTimeout(() => {
-      const result = login(identifier, password);
-      if (result.success) {
-        navigate(result.role === 'faculty' ? '/faculty' : '/student');
-      } else {
-        setError(result.error);
-        setIsLoading(false);
-      }
-    }, 600);
-  };
+    const result = login(identifier, password);
+    if (result.success) {
+    } else {
+      setError(result.error);
+      setIsLoading(false);
+    }
+  }, 600);
+};
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -144,28 +143,26 @@ export default function LoginPage() {
           </div>
 
           {showReset && (
-            <div className="mt-4 p-4 bg-slate-100 rounded-xl border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-slate-700">Enter your email to reset:</label>
-                <button onClick={() => setShowReset(false)} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
-              </div>
-              <input type="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="w-full p-2 rounded border border-slate-300 mb-2 text-sm" placeholder="your@email.com" />
-              <button onClick={handleResetPassword} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">Send Reset Link</button>
+  <div className="mt-4 p-4 bg-slate-100 rounded-xl border border-slate-200">
+    <label className="block text-sm font-semibold mb-2">Enter your college email to reset:</label>
+    <input 
+      type="email" 
+      value={resetEmail} 
+      onChange={(e) => setResetEmail(e.target.value)} 
+      className="w-full p-2 rounded border border-slate-300 mb-2 text-sm" 
+      placeholder="yourname@dypiu.ac.in" 
+    />
+    
+    {/* 🔥 NAYA: Warning Message */}
+    <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 mb-3 flex items-start gap-1">
+      <span>⚠️</span> Please enter your official DYPiu college email address only. Other emails will not receive the link.
+    </p>
+
+    <button onClick={handleResetPassword} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
+      Send Reset Link
+              </button>
             </div>
           )}
-
-          {/* Demo Credentials */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
-              <div className="relative flex justify-center text-xs"><span className="bg-slate-50 px-3 text-slate-400 uppercase font-semibold">Demo Accounts</span></div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <button onClick={() => { setIdentifier('faculty1'); setPassword('faculty123'); }} className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-indigo-600 text-xs font-semibold py-2.5 rounded-xl hover:bg-indigo-50 transition"><Sparkles className="w-3.5 h-3.5" /> Faculty</button>
-              <button onClick={() => { setIdentifier('student1'); setPassword('student123'); }} className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-emerald-600 text-xs font-semibold py-2.5 rounded-xl hover:bg-emerald-50 transition"><Sparkles className="w-3.5 h-3.5" /> Student</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
