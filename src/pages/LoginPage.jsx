@@ -155,7 +155,7 @@ export default function LoginPage() {
     
     {/* 🔥 NAYA: Warning Message */}
     <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 mb-3 flex items-start gap-1">
-      <span>⚠️</span> Please enter your official DYPiu college email address only. Other emails will not receive the link.
+      <span>⚠️</span> Please enter your official DYPiu college email address only. Other emails will not receive the link.(Check your spam folder if you don't see it in inbox)
     </p>
 
     <button onClick={handleResetPassword} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
