@@ -285,7 +285,7 @@ export default function StudentPage() {
                     Make sure to enter your PRN correctly in the form.
                   </p>
                   
-                  {selectedSubject.formLink ? (
+                  {selectedSubject?.formLink ? (
                     <a 
                       href={selectedSubject.formLink} 
                       target="_blank" 

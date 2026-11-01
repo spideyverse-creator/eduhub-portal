@@ -90,18 +90,22 @@ export default function FacultyPage() {
 
   // ================= ACTIONS =================
   const handleCreateSubject = async (newSubject) => {
-    try {
-      await addDoc(collection(db, "subjects"), {
-        ...newSubject,
-        facultyId: user.id,
-        faculty: user.name,
-      });
-      showToast('Subject created successfully!');
-    } catch (err) {
-      console.error(err);
-      showToast('Error creating subject.');
-    }
-  };
+  try {
+    // 🔥 Naya document banate waqt 'id' field ko hata do
+    // Taaki Firestore apna asli ID de sake
+    const { id, ...subjectData } = newSubject; 
+    
+    await addDoc(collection(db, "subjects"), {
+      ...subjectData,
+      facultyId: user.id,
+      faculty: user.name,
+    });
+    showToast('Subject created successfully!');
+  } catch (err) {
+    console.error(err);
+    showToast('Error creating subject.');
+  }
+};
 
   const handleDeleteResource = async (id) => {
     if (!window.confirm("Are you sure you want to delete this resource?")) return;
@@ -466,15 +470,18 @@ export default function FacultyPage() {
             
             <button
               onClick={async () => {
-                try {
-                  await setDoc(doc(db, "subjects", selectedSubject.id), { formLink: tempLink }, { merge: true });
-                  showToast('Form link saved successfully!');
-                  setIsLinkModalOpen(false);
-                } catch (error) {
-                  console.error(error);
-                  showToast('Failed to save link.');
-                }
-              }}
+  try {
+    // 🔥 Ye line update karni hai
+    const subjectRef = doc(db, "subjects", selectedSubject.id);
+    await setDoc(subjectRef, { formLink: tempLink }, { merge: true });
+    
+    showToast('Form link saved successfully!');
+    setIsLinkModalOpen(false);
+  } catch (error) {
+    console.error(error);
+    showToast('Failed to save link.');
+  }
+}}
               className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition"
             >
               Save Link
