@@ -40,19 +40,20 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  // src/pages/LoginPage.jsx
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
 
-    setTimeout(() => {
-    const result = login(identifier, password);
-    if (result.success) {
-    } else {
-      setError(result.error);
-      setIsLoading(false);
-    }
-  }, 600);
+  const result = await login(identifier, password);
+  
+  if (result.success) {
+    navigate(result.role === 'faculty' ? '/faculty' : '/student');
+  } else {
+    setError(result.error);
+    setIsLoading(false);
+  }
 };
 
   return (

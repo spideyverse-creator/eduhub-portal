@@ -30,19 +30,34 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      return { success: true, role: userDoc.data()?.role };
-    } catch (error) {
-      let errMsg = "Invalid email or password.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-         errMsg = "Email ya Password galat hai.";
-      }
-      return { success: false, error: errMsg };
+  // src/context/AuthContext.jsx
+const login = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+    
+    if (!userDoc.exists()) {
+      return { success: false, error: "User data not found in database." };
     }
-  };
+    
+    return { success: true, role: userDoc.data()?.role };
+  } catch (error) {
+    console.error(error);
+    let errMsg = "Login failed. Please try again.";
+    
+    if (error.code === 'auth/user-not-found') {
+      errMsg = "No account found with this email.";
+    } else if (error.code === 'auth/wrong-password') {
+      errMsg = "Incorrect password. Please try again.";
+    } else if (error.code === 'auth/invalid-email') {
+      errMsg = "Please enter a valid email address.";
+    } else if (error.code === 'auth/too-many-requests') {
+      errMsg = "Too many failed attempts. Please try again later.";
+    }
+    
+    return { success: false, error: errMsg };
+  }
+};
 
   const logout = () => {
     signOut(auth);
