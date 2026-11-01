@@ -389,14 +389,15 @@ export default function FacultyPage() {
             facultyName={user?.name}
             facultyId={user?.id}
           />
-          <PostAnnouncementModal 
-            isOpen={isAnnouncementModalOpen} 
-            onClose={() => setIsAnnouncementModalOpen(false)} 
-            onPost={() => {}}
-            subjectId={selectedSubject.id}
-            facultyName={user?.name}
-            facultyId={user?.id}
-          />
+          // FacultyPage.jsx me dhundh:
+<PostAnnouncementModal 
+  isOpen={isAnnouncementModalOpen} 
+  onClose={() => setIsAnnouncementModalOpen(false)} 
+  // onPost={() => {}}  <-- 🔥 Is line ko delete kar de
+  subjectId={selectedSubject.id}
+  facultyName={user?.name}
+  facultyId={user?.id}
+/>
         </>
       )}
 

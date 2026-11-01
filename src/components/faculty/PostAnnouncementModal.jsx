@@ -2,31 +2,43 @@
 import { useState } from 'react';
 import { Megaphone } from 'lucide-react';
 import Modal from '../common/Modal';
-import { generateId, todayString } from '../../utils/fileHelper';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
-export default function PostAnnouncementModal({ isOpen, onClose, onPost, subjectId, facultyName, facultyId }) {
+export default function PostAnnouncementModal({ isOpen, onClose, subjectId, facultyName, facultyId }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [urgent, setUrgent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !content) return;
 
-    const newAnnouncement = {
-      id: generateId('ann'),
-      subjectId: subjectId,
-      title: title,
-      content: content,
-      date: todayString(),
-      author: facultyName,
-      authorId: facultyId,
-      urgent: urgent,
-    };
+    setIsLoading(true);
+    try {
+      // 🔥 Direct Firebase Firestore me save kar rahe hain
+      await addDoc(collection(db, 'announcements'), {
+        subjectId: subjectId,
+        title: title,
+        content: content,
+        date: new Date().toISOString().split('T')[0], // Aaj ki date
+        author: facultyName,
+        facultyId: facultyId,
+        urgent: urgent,
+      });
 
-    onPost(newAnnouncement);
-    setTitle(''); setContent(''); setUrgent(false);
-    onClose();
+      // Form Reset
+      setTitle(''); 
+      setContent(''); 
+      setUrgent(false);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to post notice. Check internet.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,9 +70,11 @@ export default function PostAnnouncementModal({ isOpen, onClose, onPost, subject
             Mark as Urgent Notice (Highlight in yellow)
           </label>
         </div>
-        <div className="pt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
-          <button type="submit" className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition">Publish Notice</button>
+        <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 mt-4 pt-4">
+          <button type="button" onClick={onClose} disabled={isLoading} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
+          <button type="submit" disabled={isLoading} className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow transition disabled:opacity-50">
+            {isLoading ? 'Posting...' : 'Publish Notice'}
+          </button>
         </div>
       </form>
     </Modal>
