@@ -389,7 +389,6 @@ export default function FacultyPage() {
             facultyName={user?.name}
             facultyId={user?.id}
           />
-          // FacultyPage.jsx me dhundh:
 <PostAnnouncementModal 
   isOpen={isAnnouncementModalOpen} 
   onClose={() => setIsAnnouncementModalOpen(false)} 
