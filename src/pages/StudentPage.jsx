@@ -186,29 +186,36 @@ export default function StudentPage() {
               </div>
             </div>
 
-            {/* 🔥 PROGRESS BAR SECTION */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">Your Progress</h3>
-                    <p className="text-xs text-slate-500">{completedCount} of {subjectResources.length} materials completed</p>
-                  </div>
-                </div>
-                <span className="text-lg font-extrabold text-emerald-600">{progressPercent}%</span>
-              </div>
-              
-              {/* Progress Bar Line */}
-              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500 ease-out" 
-                  style={{ width: `${progressPercent}%` }}
-                ></div>
-              </div>
-            </div>
+           {/* 🔥 PREMIUM PROGRESS BAR SECTION */}
+<div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-5 shadow-lg mb-5 text-white relative overflow-hidden">
+  {/* Background Design (Optional) */}
+  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+  
+  <div className="relative z-10">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+          <CheckCircle2 className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold text-white">Your Progress</h3>
+          <p className="text-xs text-indigo-100 font-medium">
+            {completedCount} of {subjectResources.length} materials completed
+          </p>
+        </div>
+      </div>
+      <span className="text-3xl font-extrabold text-white">{progressPercent}%</span>
+    </div>
+    
+    {/* Progress Bar Line */}
+    <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden backdrop-blur-sm border border-white/10">
+      <div 
+        className="bg-white h-3 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]" 
+        style={{ width: `${progressPercent}%` }}
+      ></div>
+    </div>
+  </div>
+</div>
 
             <div className="bg-white rounded-2xl p-2 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
