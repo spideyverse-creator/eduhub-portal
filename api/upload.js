@@ -3,7 +3,7 @@ import { uploadHandler } from "@upstash/blob";
 
 export const uploads = uploadHandler({
   constraints: {
-    maxSize: "15mb",
+    maxSize: "15mb", // 15MB tak allow
     contentTypes: ["application/pdf"],
   },
   onBeforeUpload: ({ file }) => {
@@ -17,7 +17,6 @@ export const uploads = uploadHandler({
 });
 
 export default async function handler(req, res) {
-  // GET aur POST dono allow karo
   if (req.method === 'GET' || req.method === 'POST') {
     return uploads(req, res);
   }
