@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { 
   BookOpen, CheckSquare, FlaskConical, Megaphone, 
   FileText, Eye, Download, Search, AlertTriangle, 
-  ChevronLeft, FolderOpen, Star, UploadCloud, ChevronRight
+  ChevronLeft, FolderOpen, Star, UploadCloud, ChevronRight,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext'; 
 import Header from '../components/common/Header';
@@ -75,6 +76,15 @@ export default function StudentPage() {
   };
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
+
+  // Progress Calculations for Selected Subject
+  const subjectResources = resources.filter(r => r.subjectId === selectedSubjectId);
+  const completedCount = subjectResources.filter(r => 
+    localUser?.completedResources?.includes(r.id)
+  ).length;
+  const progressPercent = subjectResources.length > 0 
+    ? Math.round((completedCount / subjectResources.length) * 100) 
+    : 0;
 
   const currentResources = resources.filter(r => {
     if (r.subjectId !== selectedSubjectId || r.category !== activeTab) return false;
@@ -173,6 +183,30 @@ export default function StudentPage() {
                   <span>•</span>
                   <span>Venue: <strong>{selectedSubject.room}</strong></span>
                 </div>
+              </div>
+            </div>
+
+            {/* 🔥 PROGRESS BAR SECTION */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Your Progress</h3>
+                    <p className="text-xs text-slate-500">{completedCount} of {subjectResources.length} materials completed</p>
+                  </div>
+                </div>
+                <span className="text-lg font-extrabold text-emerald-600">{progressPercent}%</span>
+              </div>
+              
+              {/* Progress Bar Line */}
+              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div 
+                  className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500 ease-out" 
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
               </div>
             </div>
 
